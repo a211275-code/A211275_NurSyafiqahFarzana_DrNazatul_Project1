@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.example.a211275_nursyafiqahfarzana_drnazatul_lab04
 
 import androidx.compose.animation.*
@@ -22,8 +38,26 @@ import com.example.a211275_nursyafiqahfarzana_drnazatul_lab04.ui.theme.*
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.draw.clip
-import com.example.a211275_nursyafiqahfarzana_drnazatul_lab04.R
+import androidx.compose.ui.platform.LocalContext
 
+@Composable
+fun getFoodDrawableId(imageName: String): Int {
+    val context = LocalContext.current
+    return remember(imageName) {
+        val resId = context.resources.getIdentifier(
+            imageName,
+            "drawable",
+            context.packageName
+        )
+        // FIXED: Safely uses the platform's gallery asset icon if a local resource string isn't found
+        if (resId != 0) resId else android.R.drawable.ic_menu_gallery
+    }
+}
+
+/**
+ * Main application interface dashboard for browsing campus meals.
+ * Managed within FoodInterface.kt
+ */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun Lab3FoodInterface(
@@ -41,10 +75,10 @@ fun Lab3FoodInterface(
     val scope = rememberCoroutineScope()
 
     val foodItems = listOf(
-        FoodItem(1, "Nasi Ayam Geprek", 3.50, "Cafe Kolej Pendeta Za'ba", R.drawable.nasiayamgeprek),
-        FoodItem(2, "Roti Canai ", 2.00, "Lot 10, Pusanika", R.drawable.roticanai),
-        FoodItem(3, "Chicken Chop", 5.00, "Unikeb Food Court", R.drawable.chickenchop),
-        FoodItem(4, "Nasi Lemak", 1.50, "Cafe D, FTSM", R.drawable.nasilemak)
+        FoodItem(1, "Nasi Ayam Geprek", 3.50, "Cafe Kolej Pendeta Za'ba", "nasiayamgeprek"),
+        FoodItem(2, "Roti Canai ", 2.00, "Lot 10, Pusanika", "roticanai"),
+        FoodItem(3, "Chicken Chop", 5.00, "Unikeb Food Court", "chickenchop"),
+        FoodItem(4, "Nasi Lemak", 1.50, "Cafe D, FTSM", "nasilemak")
     )
 
     val filteredItems = foodItems.filter { it.name.contains(searchQuery, ignoreCase = true) }
@@ -131,6 +165,8 @@ fun Lab3FoodInterface(
 @Composable
 fun ExpandableFoodCardWithFav(item: FoodItem, isFavourite: Boolean, onToggleFavourite: (FoodItem) -> Unit, onAddToCart: (FoodItem) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
+    val dynamicDrawableId = getFoodDrawableId(item.imageName)
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).clickable { expanded = !expanded }.animateContentSize(),
         shape = RoundedCornerShape(16.dp),
@@ -140,7 +176,7 @@ fun ExpandableFoodCardWithFav(item: FoodItem, isFavourite: Boolean, onToggleFavo
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Image(
-                    painter = painterResource(id = item.imageResId),
+                    painter = painterResource(id = dynamicDrawableId),
                     contentDescription = item.name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier

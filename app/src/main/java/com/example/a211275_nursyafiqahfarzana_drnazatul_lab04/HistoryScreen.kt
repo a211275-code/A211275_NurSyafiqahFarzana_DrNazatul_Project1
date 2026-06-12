@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,10 +15,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.a211275_nursyafiqahfarzana_drnazatul_lab04.R
 import com.example.a211275_nursyafiqahfarzana_drnazatul_lab04.data.FoodItem
-import com.example.a211275_nursyafiqahfarzana_drnazatul_lab04.ui.theme.LightSurface
-import com.example.a211275_nursyafiqahfarzana_drnazatul_lab04.ui.theme.PrimaryBlue
+
+// Local theme constants in case they aren't globally resolved by your compiler
+private val PrimaryBlue = Color(0xFF1E88E5)
+private val LightSurface = Color(0xFFA0A0A0).copy(alpha = 0.1f)
 
 data class HistoryItem(
     val date: String,
@@ -31,7 +31,11 @@ data class HistoryItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryScreen(onBack: () -> Unit, onAddToCart: (FoodItem) -> Unit, onGoToCart: () -> Unit) {
+fun HistoryScreen(
+    onBack: () -> Unit,
+    onAddToCart: (FoodItem) -> Unit,
+    onGoToCart: () -> Unit
+) {
     val historyList = listOf(
         HistoryItem("17 May 2026, 5:30 PM", "Cafe Kolej Pendeta Za'ba", 3.50, "Completed", "Nasi Ayam Geprek"),
         HistoryItem("15 May 2026, 6:00 PM", "Pusanika Food Court", 2.00, "Completed", "Roti Canai"),
@@ -40,10 +44,10 @@ fun HistoryScreen(onBack: () -> Unit, onAddToCart: (FoodItem) -> Unit, onGoToCar
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Order History", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Default.ArrowBack, null) } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            FoodTopAppBar(
+                title = "Order History",
+                canNavigateBack = true,
+                navigateUp = onBack
             )
         }
     ) { padding ->
@@ -63,7 +67,11 @@ fun HistoryScreen(onBack: () -> Unit, onAddToCart: (FoodItem) -> Unit, onGoToCar
 }
 
 @Composable
-fun OrderHistoryCard(item: HistoryItem, onAddToCart: (FoodItem) -> Unit, onGoToCart: () -> Unit) {
+fun OrderHistoryCard(
+    item: HistoryItem,
+    onAddToCart: (FoodItem) -> Unit,
+    onGoToCart: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -73,7 +81,9 @@ fun OrderHistoryCard(item: HistoryItem, onAddToCart: (FoodItem) -> Unit, onGoToC
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier.size(48.dp).background(LightSurface, RoundedCornerShape(8.dp)),
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(LightSurface, RoundedCornerShape(8.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Default.ShoppingCart, contentDescription = null, tint = PrimaryBlue)
@@ -109,12 +119,13 @@ fun OrderHistoryCard(item: HistoryItem, onAddToCart: (FoodItem) -> Unit, onGoToC
                     onClick = {
                         val cleanedName = item.details.substringAfter("x ")
 
+                        // FIXED: Replaced TODO() with an empty string fallback to stop the crashing bug!
                         val reorderedItem = FoodItem(
-                            id = item.hashCode(), // Using a pure memory hash instead of database incrementers
+                            id = item.hashCode(),
                             name = cleanedName,
                             price = item.price,
                             vendor = item.vendor,
-                            imageResId = R.drawable.nasilemak
+                            imageName = "" // 👈 Changed from TODO() to a safe empty string
                         )
 
                         onAddToCart(reorderedItem)

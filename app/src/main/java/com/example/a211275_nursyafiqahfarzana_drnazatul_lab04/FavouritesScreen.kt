@@ -1,9 +1,10 @@
 package com.example.a211275_nursyafiqahfarzana_drnazatul_lab04
 
+import androidx.compose.foundation.clickable // 👈 ADD THIS IMPORT
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -16,16 +17,18 @@ import com.example.a211275_nursyafiqahfarzana_drnazatul_lab04.data.OrderUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FavouritesScreen(uiState: OrderUiState, onRemoveFavourite: (FoodItem) -> Unit, onBack: () -> Unit) {
+fun FavouritesScreen(
+    uiState: OrderUiState,
+    onRemoveFavourite: (FoodItem) -> Unit,
+    onItemClick: (FoodItem) -> Unit, // 👈 ADD THIS: To handle checkout navigation
+    onBack: () -> Unit
+) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("My Favourites") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
-                    }
-                }
+            FoodTopAppBar(
+                title = "My Favourites",
+                canNavigateBack = true,
+                navigateUp = onBack
             )
         }
     ) { p ->
@@ -36,12 +39,21 @@ fun FavouritesScreen(uiState: OrderUiState, onRemoveFavourite: (FoodItem) -> Uni
                 }
             } else {
                 LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(uiState.favouriteItems) { item ->
+                    items(
+                        items = uiState.favouriteItems,
+                        key = { item -> item.id }
+                    ) { item ->
                         ListItem(
                             headlineContent = { Text(item.name) },
+                            // 👇 ADD THIS: Makes the row clickable to send you to checkout!
+                            modifier = Modifier.clickable { onItemClick(item) },
                             trailingContent = {
                                 IconButton(onClick = { onRemoveFavourite(item) }) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Remove Favourite", tint = Color.Red)
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Remove Favourite",
+                                        tint = Color.Red
+                                    )
                                 }
                             }
                         )

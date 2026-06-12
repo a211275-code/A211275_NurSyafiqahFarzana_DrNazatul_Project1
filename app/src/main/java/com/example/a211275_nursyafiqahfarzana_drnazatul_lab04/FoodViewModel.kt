@@ -1,43 +1,63 @@
+/*
+ * Copyright (C) 2023 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.example.a211275_nursyafiqahfarzana_drnazatul_lab04
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.a211275_nursyafiqahfarzana_drnazatul_lab04.data.FoodItem
+import com.example.a211275_nursyafiqahfarzana_drnazatul_lab04.data.FoodRepository
 import com.example.a211275_nursyafiqahfarzana_drnazatul_lab04.data.OrderUiState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-// Removed the FoodRepository dependency completely to satisfy the "No Room/Cloud" requirement
-class FoodViewModel : ViewModel() {
+class FoodViewModel(private val foodRepository: FoodRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(OrderUiState())
     val uiState: StateFlow<OrderUiState> = _uiState.asStateFlow()
 
-    init {
-        // Pre-populate your menu items locally into the state so your UI has data to display
-        _uiState.update { currentState ->
-            currentState.copy(
-                availableMenu = listOf(
-                    FoodItem(1, "Nasi Lemak Ayam", 12.50, "Kak Lah Stall", android.R.drawable.ic_menu_gallery),
-                    FoodItem(2, "Char Kuey Teow", 10.00, "Penang Foodie", android.R.drawable.ic_menu_gallery),
-                    FoodItem(3, "Roti Canai", 3.50, "Mamak Corner", android.R.drawable.ic_menu_gallery)
-                )
+    val databaseCartItems: StateFlow<List<FoodItem>> =
+        foodRepository.getAllItemsStream()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(TIMEOUT_MILLIS),
+                initialValue = emptyList()
             )
+
+    fun addToCart(item: FoodItem) {
+        viewModelScope.launch {
+            foodRepository.insertItem(item)
         }
     }
 
-    fun addToCart(item: FoodItem) {
-        // Handles data sharing across screens purely via state updates
-        _uiState.update { it.copy(cartItems = it.cartItems + item) }
-    }
-
     fun removeFromCart(item: FoodItem) {
-        _uiState.update { it.copy(cartItems = it.cartItems - item) }
+        viewModelScope.launch {
+            foodRepository.deleteFoodItemById(item.id)
+        }
     }
 
     fun clearCart() {
-        _uiState.update { it.copy(cartItems = emptyList()) }
+        viewModelScope.launch {
+            foodRepository.clearCartTable()
+        }
     }
 
     fun setCustomerInfo(name: String, note: String) {
@@ -53,5 +73,10 @@ class FoodViewModel : ViewModel() {
                 currentState.copy(favouriteItems = currentFavs + item)
             }
         }
+    }
+
+    companion object {
+        // FIXED: Factory removed completely. Only keeping required configuration values.
+        private const val TIMEOUT_MILLIS = 5_000L
     }
 }
