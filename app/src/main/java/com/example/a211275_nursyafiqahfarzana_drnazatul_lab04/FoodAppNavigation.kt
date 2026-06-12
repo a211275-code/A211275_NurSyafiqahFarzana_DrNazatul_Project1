@@ -31,7 +31,7 @@ fun FoodAppNavigation(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // 👇 ADD THIS: Collect your live Room database items stream right here!
+
     val databaseCartItems by viewModel.databaseCartItems.collectAsState()
 
     NavHost(
@@ -40,7 +40,7 @@ fun FoodAppNavigation(
     ) {
         composable(route = FoodScreen.Home.name) {
             Lab3FoodInterface(
-                // 👇 FIXED: Now counts real database items instead of empty UI state list
+
                 cartCount = databaseCartItems.size,
                 favouriteItems = uiState.favouriteItems,
                 onAddToCart = { viewModel.addToCart(it) },
